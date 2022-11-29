@@ -1,7 +1,4 @@
-use std::{
-    ops::{Add, AddAssign},
-    str::FromStr,
-};
+use std::{ops::Add, str::FromStr};
 
 #[derive(Debug)]
 enum Direction {
@@ -49,20 +46,20 @@ struct Node {
 impl Node {
     fn get_or_insert_default(&mut self, direction: Direction) -> &mut Self {
         match direction {
-            Direction::L => match self.left {
-                Some(node) => node,
-                None => {
+            Direction::L => {
+                if self.left.is_none() {
                     self.left = Some(Box::new(Node::default()));
-                    self.left.as_mut().unwrap().as_mut()
                 }
-            },
-            Direction::R => match self.right.as_mut() {
-                Some(node) => node,
-                None => {
+
+                self.left.as_mut().unwrap().as_mut()
+            }
+            Direction::R => {
+                if self.right.is_none() {
                     self.right = Some(Box::new(Node::default()));
-                    &mut self.right.unwrap()
                 }
-            },
+
+                self.right.as_mut().unwrap().as_mut()
+            }
         }
     }
 }
@@ -87,5 +84,5 @@ fn main() {
     let res =
         lib::input::<House>("input/input.txt").fold(Node::default(), |tree, house| tree.add(house));
 
-    println!("{:?}", res);
+    println!("{:#?}", res);
 }

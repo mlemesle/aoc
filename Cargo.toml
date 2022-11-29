@@ -1,0 +1,9 @@
+[workspace]
+
+members = [
+  "2022",
+  "lib"
+]
+
+[workspace.dependencies]
+anyhow = "1.0.66"

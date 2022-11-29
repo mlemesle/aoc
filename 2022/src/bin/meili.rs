@@ -80,9 +80,55 @@ impl Add<House> for Node {
     }
 }
 
+fn get_kid_with_depth(node: &Node, current_depth: usize) -> (&String, usize) {
+    if let Some(kid) = &node.kid {
+        return (kid, current_depth);
+    }
+
+    match (node.left.as_ref(), node.right.as_ref()) {
+        (None, None) => unreachable!("Leaf without kid ?"),
+        (None, Some(node)) | (Some(node), None) => get_kid_with_depth(node, current_depth),
+        (Some(left), Some(right)) => {
+            let (left_kid, left_depth) = get_kid_with_depth(left, current_depth + 1);
+            let (right_kid, right_depth) = get_kid_with_depth(right, current_depth + 1);
+
+            match left_depth.cmp(&right_depth) {
+                std::cmp::Ordering::Greater => (right_kid, right_depth),
+                _ => (left_kid, left_depth),
+            }
+        }
+    }
+}
+
+fn get_kid_with_depth2(node: &mut Node, current_depth: usize) -> (&String, usize) {
+    if let Some(kid) = &node.kid {
+        return (kid, current_depth);
+    }
+
+    match (node.left.as_ref(), node.right.as_ref()) {
+        (None, None) => unreachable!("Leaf without kid ?"),
+        (None, Some(node)) | (Some(node), None) => get_kid_with_depth(node, current_depth),
+        (Some(left), Some(right)) => {
+            let (left_kid, left_depth) = get_kid_with_depth(left, current_depth + 1);
+            let (right_kid, right_depth) = get_kid_with_depth(right, current_depth + 1);
+
+            match left_depth.cmp(&right_depth) {
+                std::cmp::Ordering::Greater => (right_kid, right_depth),
+                _ => (left_kid, left_depth),
+            }
+        }
+    }
+}
+
+fn part1(tree: &Node) {
+    println!("{:#?}", get_kid_with_depth(tree, 0));
+}
+
+fn part2(tree: &mut Node) {}
+
 fn main() {
-    let res =
+    let tree =
         lib::input::<House>("input/input.txt").fold(Node::default(), |tree, house| tree.add(house));
 
-    println!("{:#?}", res);
+    part1(&tree);
 }

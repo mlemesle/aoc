@@ -1,117 +1,132 @@
 use std::{ops::Add, str::FromStr};
 
-type Key = usize;
+use tree::*;
+mod tree {
+    pub use lib::slutmap::Key;
 
-#[derive(Default, Debug)]
-struct Node {
-    parent: Option<usize>,
-    left: Option<usize>,
-    right: Option<usize>,
-    kid: Option<String>,
-}
+    use super::Direction;
+    use lib::slutmap::Slutmap;
 
-impl Node {
-    fn is_empty(&self) -> bool {
-        self.is_leaf() && self.kid.is_none()
+    #[derive(Clone, Default, Debug)]
+    pub struct Node {
+        parent: Option<Key>,
+        left: Option<Key>,
+        right: Option<Key>,
+        kid: Option<String>,
     }
 
-    fn is_leaf(&self) -> bool {
-        self.left.is_none() && self.right.is_none()
-    }
-}
+    impl Node {
+        pub fn parent(&self) -> Option<Key> {
+            self.parent
+        }
 
-#[derive(Default, Debug)]
-struct Tree {
-    nodes: Vec<Node>,
-}
+        pub fn left(&self) -> Option<Key> {
+            self.left
+        }
 
-impl Tree {
-    fn push(&mut self, node: Node) -> Key {
-        let index = self.nodes.len();
-        self.nodes.push(node);
-        index
-    }
+        pub fn right(&self) -> Option<Key> {
+            self.right
+        }
 
-    fn get(&self, key: Key) -> &Node {
-        self.nodes.get(key).unwrap()
-    }
+        pub fn kid(&self) -> Option<&str> {
+            self.kid.as_deref()
+        }
 
-    fn get_mut(&mut self, key: Key) -> &mut Node {
-        self.nodes.get_mut(key).unwrap()
-    }
+        pub fn is_orphan(&self) -> bool {
+            self.parent.is_none()
+        }
 
-    fn get_or_insert_default(&mut self, index: Key, direction: Direction) -> Key {
-        let Node { left, right, .. } = self.get(index);
-
-        match direction {
-            Direction::L => match *left {
-                Some(left) => {
-                    self.get_mut(left).parent = Some(index);
-                    left
-                }
-                None => {
-                    let child = self.push(Node {
-                        parent: Some(index),
-                        left: None,
-                        right: None,
-                        kid: None,
-                    });
-                    self.get_mut(index).left = Some(child);
-                    child
-                }
-            },
-            Direction::R => match *right {
-                Some(right) => {
-                    self.get_mut(right).parent = Some(index);
-                    right
-                }
-                None => {
-                    let child = self.push(Node {
-                        parent: Some(index),
-                        left: None,
-                        right: None,
-                        kid: None,
-                    });
-                    self.get_mut(index).right = Some(child);
-                    child
-                }
-            },
+        pub fn is_leaf(&self) -> bool {
+            self.left.is_none() && self.right.is_none()
         }
     }
 
-    /// Removes parent if empty, but does not remove children :)
-    fn remove(&mut self, key: Key) -> Option<Key> {
-        let node = self.nodes.remove(key);
+    #[derive(Clone, Default, Debug)]
+    pub struct Tree(Slutmap<Node>);
 
-        assert!(node.left.is_none());
-        assert!(node.right.is_none());
+    impl Tree {
+        pub fn new() -> Self {
+            Self(Slutmap::new())
+        }
 
-        if let Some(parent_key) = node.parent {
-            let parent = self.get_mut(parent_key);
+        pub fn with_root() -> (Self, Key) {
+            let mut tree = Self::default();
+            let key = tree.0.insert(Node::default());
+            (tree, key)
+        }
 
-            if parent.left == Some(key) {
-                parent.left = None;
+        pub fn get(&self, key: Key) -> Option<&Node> {
+            self.0.get(key)
+        }
+
+        pub fn kid_mut(&mut self, key: Key) -> Option<&mut Option<String>> {
+            self.0.get_mut(key).map(|node| &mut node.kid)
+        }
+
+        pub fn ensure(&mut self, key: Key, direction: Direction) -> Option<Key> {
+            match direction {
+                Direction::L => self.ensure_left(key),
+                Direction::R => self.ensure_right(key),
+            }
+        }
+
+        pub fn ensure_left(&mut self, key: Key) -> Option<Key> {
+            match self.0.get(key).map(|node| node.left) {
+                Some(Some(left)) => Some(left),
+                Some(None) => {
+                    let left = self.0.insert(Node::default());
+                    self.0.get_mut(key).expect("Unreachable: invalid key").left = Some(left);
+                    Some(left)
+                }
+                None => None,
+            }
+        }
+
+        pub fn ensure_right(&mut self, key: Key) -> Option<Key> {
+            match self.0.get(key).map(|node| node.right) {
+                Some(Some(right)) => Some(right),
+                Some(None) => {
+                    let right = self.0.insert(Node::default());
+                    self.0.get_mut(key).expect("Unreachable: invalid key").right = Some(right);
+                    Some(right)
+                }
+                None => None,
+            }
+        }
+
+        pub fn remove(&mut self, key: Key) -> Option<Key> {
+            fn remove(tree: &mut Tree, key: Key) {
+                tree.0.remove(key).map(|node| {
+                    node.left.map(|left| remove(tree, left));
+                    node.right.map(|right| remove(tree, right));
+                });
             }
 
-            if parent.right == Some(key) {
-                parent.right = None;
-            }
+            if let Some(parent_key) = self.0.get(key).and_then(Node::parent) {
+                let parent_node = self.0.get_mut(parent_key).expect("Parent exists");
 
-            if parent.is_empty() {
-                self.remove(parent_key)
-            } else {
+                if parent_node.left == Some(key) {
+                    parent_node.left = None;
+                }
+
+                if parent_node.right == Some(key) {
+                    parent_node.right = None;
+                }
+
+                remove(self, key);
+
                 Some(parent_key)
+            } else {
+                None
             }
-        } else {
-            None
         }
     }
 }
 
 #[derive(Debug)]
-enum Direction {
-    R,
+pub enum Direction {
     L,
+    R,
 }
 
 #[derive(Debug)]
@@ -144,33 +159,34 @@ impl FromStr for House {
     }
 }
 
-impl Add<House> for Tree {
+impl Add<House> for (Tree, Key) {
     type Output = Self;
 
-    fn add(mut self, house: House) -> Self::Output {
-        let mut current = 0;
+    fn add(self, house: House) -> Self::Output {
+        let (mut tree, key) = self;
+        let mut current = key;
 
         for direction in house.path {
-            current = self.get_or_insert_default(current, direction);
+            current = tree.ensure(current, direction).unwrap();
         }
 
-        self.get_mut(current).kid = Some(house.kid);
+        *tree.kid_mut(current).unwrap() = Some(house.kid);
 
-        self
+        (tree, key)
     }
 }
 
-fn get_kid_with_depth(tree: &Tree, key: Key, current_depth: usize) -> (&String, usize) {
-    let node = tree.get(key);
+fn get_kid_with_depth(tree: &Tree, key: Key, current_depth: usize) -> (&str, usize) {
+    let node = tree.get(key).unwrap();
 
-    if let Some(kid) = &node.kid {
+    if let Some(kid) = node.kid() {
         return (kid, current_depth);
     }
 
-    match (node.left.as_ref(), node.right.as_ref()) {
-        (None, None) => unreachable!("Leaf without kid ?"),
-        (None, Some(&node)) | (Some(&node), None) => get_kid_with_depth(tree, node, current_depth),
-        (Some(&left), Some(&right)) => {
+    match (node.left(), node.right()) {
+        (None, None) => unreachable!("Leaf without kid?"),
+        (None, Some(node)) | (Some(node), None) => get_kid_with_depth(tree, node, current_depth),
+        (Some(left), Some(right)) => {
             let (left_kid, left_depth) = get_kid_with_depth(tree, left, current_depth + 1);
             let (right_kid, right_depth) = get_kid_with_depth(tree, right, current_depth + 1);
 
@@ -183,21 +199,21 @@ fn get_kid_with_depth(tree: &Tree, key: Key, current_depth: usize) -> (&String, 
 }
 
 fn get_kid_with_depth_2(tree: &mut Tree, key: Key, prev: Key, current_depth: usize) -> usize {
-    let node = tree.get(key);
+    let node = tree.get(key).unwrap();
 
-    if node.kid.is_some() {
+    if node.kid().is_some() {
         // kid = None
         // Si feuille remove
-        tree.get_mut(key).kid = None;
+        *tree.kid_mut(key).unwrap() = None;
 
-        if tree.get(key).is_leaf() {
+        if tree.get(key).unwrap().is_leaf() {
             tree.remove(key);
         }
 
         return current_depth;
     }
 
-    match (node.left, node.right, node.parent) {
+    match (node.left(), node.right(), node.parent()) {
         (None, None, _) => unreachable!(),
         (None, Some(node), None) | (Some(node), None, None) => {
             get_kid_with_depth_2(tree, node, key, current_depth)
@@ -224,29 +240,23 @@ fn get_kid_with_depth_2(tree: &mut Tree, key: Key, prev: Key, current_depth: usi
             (right != prev).then(|| get_kid_with_depth_2(tree, right, key, current_depth + 1));
             (parent != prev).then(|| get_kid_with_depth_2(tree, parent, key, current_depth + 1));
 
-
             todo!()
         }
     }
 }
 
-fn part1(tree: &Tree) {
-    println!("{:#?}", get_kid_with_depth(tree, 0, 0));
+fn part1(tree: &Tree, root: Key) {
+    println!("{:#?}", get_kid_with_depth(tree, root, 0));
 }
 
-fn part2(tree: &mut Tree) {
-    println!("{:#?}", get_kid_with_depth_2(tree, 0, 0, 0));
+fn part2(tree: &mut Tree, root: Key) {
+    println!("{:#?}", get_kid_with_depth_2(tree, root, root, 0));
 }
 
 fn main() {
     let houses = lib::input::<House>("input/input.txt");
-    let mut tree = {
-        let mut tree = Tree::default();
-        tree.nodes.push(Node::default());
+    let (mut tree, root) = houses.fold(Tree::with_root(), |tree, house| tree.add(house));
 
-        houses.fold(tree, |tree, house| tree.add(house))
-    };
-
-    part1(&tree);
-    part2(&mut tree);
+    part1(&tree, root);
+    part2(&mut tree, root);
 }

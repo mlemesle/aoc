@@ -1,4 +1,5 @@
 /// Key of a [`Slutmap`].
+#[derive(Copy, Clone, Eq, PartialEq, Debug)]
 pub struct Key(usize);
 
 /// A shameful [slotmap](https://docs.rs/slotmap/latest/slotmap).
@@ -52,7 +53,7 @@ impl<T> Slutmap<T> {
 
     pub fn remove(&mut self, key: Key) -> Option<T> {
         self.len -= 1;
-        std::mem::take(self.items.get_mut(key.0).expect("Invalid key"))
+        std::mem::take(self.items.get_mut(key.0).expect("Unreachable: invalid key"))
     }
 
     pub fn clear(&mut self) {

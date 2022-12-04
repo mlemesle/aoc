@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = { workspace = true }
+insta = "1.21.2"

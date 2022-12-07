@@ -14,17 +14,19 @@ fn get_buf(path: impl AsRef<Path>) -> BufReader<File> {
     BufReader::new(file)
 }
 
-pub fn input<T>(path: impl AsRef<Path>) -> impl Iterator<Item = T>
+pub fn input<T>(path: impl AsRef<Path>) -> Result<Vec<T>, anyhow::Error>
 where
     T: FromStr<Err = anyhow::Error>,
 {
-    get_buf(path).lines().enumerate().map(|(index, l)| {
-        l.with_context(|| format!("Error while reading line {}", index + 1))
-            .expect("Error reading line")
-            .parse::<T>()
-            .map_err(|_| anyhow::anyhow!("Error while parsing line {}", index + 1))
-            .unwrap()
-    })
+    get_buf(path)
+        .lines()
+        .enumerate()
+        .map(|(index, l)| {
+            l.with_context(|| format!("Error while reading line {}", index + 1))
+                .expect("Error reading line")
+                .parse::<T>()
+        })
+        .collect()
 }
 
 pub fn input_lines(path: impl AsRef<Path>) -> impl Iterator<Item = String> {

@@ -54,6 +54,26 @@ impl File {
     }
 }
 
+fn part1(fs: HashMap<PathBuf, usize>) {
+    let sum: usize = fs.values().filter(|&size| size <= &100_000).sum();
+
+    println!("The sum of the total sizes of those directories is {sum}");
+}
+
+fn part2(fs: HashMap<PathBuf, usize>) {
+    let needed_space = 30000000 - (70000000 - fs.get(&PathBuf::new()).unwrap());
+
+    let mut dir_sizes = fs.values().collect::<Vec<_>>();
+    dir_sizes.sort();
+
+    let dir_size = dir_sizes
+        .iter()
+        .find(|&size| size >= &&needed_space)
+        .expect("No dir satifies");
+
+    println!("The smallest directory that, if deleted, would free up enough space on the filesystem to run the update is of size {dir_size}.");
+}
+
 fn main() -> Result<(), anyhow::Error> {
     let (_, files) = lib::input::<Command>("input/day7.txt")?.iter().fold(
         (PathBuf::from("/"), Vec::new()),
@@ -72,8 +92,20 @@ fn main() -> Result<(), anyhow::Error> {
             (path_buf, files)
         },
     );
+    let map = files
+        .into_iter()
+        .fold(HashMap::<_, usize>::new(), |mut map, mut file| {
+            loop {
+                *map.entry(file.path.clone()).or_default() += file.size;
+                if !file.path.pop() {
+                    break;
+                }
+            }
+            map
+        });
 
-    println!("{:?}", files);
+    part1(map.clone());
+    part2(map);
 
     Ok(())
 }

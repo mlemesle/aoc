@@ -48,12 +48,26 @@ impl<T> BTree<T> {
         new_node_key
     }
 
+    pub fn get_or_add_left(&mut self, data: T, parent: Key) -> Key {
+        match self.get_left(&parent) {
+            Some(left) => left.get_key(),
+            None => self.add_left(data, parent),
+        }
+    }
+
     pub fn add_right(&mut self, data: T, parent: Key) -> Key {
         let new_node_key = self.inner_add(data, parent);
         if let Some(node) = self.get_node_unchecked_mut(parent) {
             node.right = Some(new_node_key);
         }
         new_node_key
+    }
+
+    pub fn get_or_add_right(&mut self, data: T, parent: Key) -> Key {
+        match self.get_right(&parent) {
+            Some(right) => right.get_key(),
+            None => self.add_right(data, parent),
+        }
     }
 
     pub fn remove(&mut self, index: Key) {
@@ -63,11 +77,11 @@ impl<T> BTree<T> {
         };
         if let Some(left_index) = node_left {
             let left = unsafe { self.nodes.get_unchecked(left_index) };
-            self.remove(left.as_ref().unwrap().index);
+            self.remove(left.as_ref().unwrap().key);
         }
         if let Some(right_index) = node_right {
             let right = unsafe { self.nodes.get_unchecked(right_index) };
-            self.remove(right.as_ref().unwrap().index);
+            self.remove(right.as_ref().unwrap().key);
         }
         unsafe { *self.nodes.get_unchecked_mut(index) = None };
 
@@ -84,6 +98,16 @@ impl<T> BTree<T> {
         };
 
         self.empty_cells.push(index);
+    }
+
+    pub fn get_by_key(&self, key: &Key) -> Option<&Node<T>> {
+        self.nodes.get(*key).and_then(|node_opt| node_opt.as_ref())
+    }
+
+    pub fn get_by_key_mut(&mut self, key: &Key) -> Option<&mut Node<T>> {
+        self.nodes
+            .get_mut(*key)
+            .and_then(|node_opt| node_opt.as_mut())
     }
 
     pub fn get_left(&self, key: &Key) -> Option<&Node<T>> {
@@ -140,21 +164,25 @@ impl<T> BTree<T> {
 #[derive(Debug)]
 pub struct Node<T> {
     data: T,
-    index: Key,
+    key: Key,
     parent: Option<Key>,
     left: Option<Key>,
     right: Option<Key>,
 }
 
 impl<T> Node<T> {
-    fn new(data: T, index: Key, parent: Option<Key>) -> Self {
+    fn new(data: T, key: Key, parent: Option<Key>) -> Self {
         Self {
             data,
-            index,
+            key,
             parent,
             left: None,
             right: None,
         }
+    }
+
+    pub fn get_key(&self) -> Key {
+        self.key
     }
 
     pub fn get_data(&self) -> &T {
@@ -178,28 +206,28 @@ mod test {
     fn is_leaf() {
         let node1 = Node {
             data: (),
-            index: 0,
+            key: 0,
             parent: None,
             left: None,
             right: None,
         };
         let node2 = Node {
             data: (),
-            index: 0,
+            key: 0,
             parent: None,
             left: Some(0),
             right: None,
         };
         let node3 = Node {
             data: (),
-            index: 0,
+            key: 0,
             parent: None,
             left: None,
             right: Some(1),
         };
         let node4 = Node {
             data: (),
-            index: 0,
+            key: 0,
             parent: None,
             left: Some(0),
             right: Some(1),

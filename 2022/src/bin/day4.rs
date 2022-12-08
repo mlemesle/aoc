@@ -72,8 +72,10 @@ fn part2<'a>(assignments: impl Iterator<Item = &'a SectionAssignments>) {
     println!("There is {} assignment pairs that overlaps", res);
 }
 
-fn main() {
-    let assignments = lib::input::<SectionAssignments>("input/day4.txt").collect::<Vec<_>>();
+fn main() -> Result<(), anyhow::Error> {
+    let assignments = lib::input::<SectionAssignments>("input/day4.txt")?;
     part1(assignments.iter());
     part2(assignments.iter());
+
+    Ok(())
 }

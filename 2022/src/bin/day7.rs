@@ -7,7 +7,7 @@ enum Command {
     CdRoot,
     CdBack,
     CdTo(String),
-    File(String, usize),
+    File(usize),
     Noop,
 }
 
@@ -33,9 +33,7 @@ impl FromStr for Command {
             (DOLLAR, CD, Some(path)) => Ok(Command::CdTo(path.to_string())),
             (DOLLAR, Some(_), _) => Ok(Command::Noop),
             (DIR, _, _) => Ok(Command::Noop),
-            (Some(size_str), Some(filename), None) => {
-                Ok(Command::File(filename.to_string(), size_str.parse()?))
-            }
+            (Some(size_str), Some(_), None) => Ok(Command::File(size_str.parse()?)),
             (_, _, _) => Err(anyhow!("weird parts {:?}", command_parts)),
         }
     }
@@ -44,13 +42,12 @@ impl FromStr for Command {
 #[derive(Debug)]
 struct File {
     path: PathBuf,
-    name: String,
     size: usize,
 }
 
 impl File {
-    fn new(path: PathBuf, name: String, size: usize) -> Self {
-        Self { path, name, size }
+    fn new(path: PathBuf, size: usize) -> Self {
+        Self { path, size }
     }
 }
 
@@ -84,9 +81,7 @@ fn main() -> Result<(), anyhow::Error> {
                     path_buf.pop();
                 }
                 Command::CdTo(to) => path_buf.push(to),
-                Command::File(name, size) => {
-                    files.push(File::new(path_buf.clone(), name.clone(), *size))
-                }
+                Command::File(size) => files.push(File::new(path_buf.clone(), *size)),
                 Command::Noop => (),
             };
             (path_buf, files)

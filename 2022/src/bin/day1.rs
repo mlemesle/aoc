@@ -1,4 +1,4 @@
-fn part1(inventory_lines: &Vec<u32>) {
+fn part1(inventory_lines: &[u32]) {
     let max = inventory_lines.iter().max();
     println!("Total calories of all elves is {:?}", max);
 }
@@ -10,7 +10,7 @@ fn part2(mut inventory_lines: Vec<u32>) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let inventory_lines = lib::input_lines("input/day1.txt")
+    let inventory_lines: Vec<_> = lib::input_lines("input/day1.txt")
         .collect::<Vec<_>>()
         .split(|inventory_line| inventory_line.is_empty())
         .map(|elf_inventory_lines| {
@@ -20,7 +20,7 @@ fn main() -> anyhow::Result<()> {
                 .sum::<u32>()
         })
         .collect();
-    part1(&inventory_lines);
+    part1(&inventory_lines[..]);
     part2(inventory_lines);
     Ok(())
 }

@@ -15,8 +15,7 @@ fn run(stream: &Stream, marker_len: usize) {
         .0
         .windows(marker_len)
         .enumerate()
-        .filter(|(_, chars)| chars.iter().collect::<HashSet<_>>().len() == marker_len)
-        .nth(0)
+        .find(|(_, chars)| chars.iter().collect::<HashSet<_>>().len() == marker_len)
         .map(|(i, _)| i + marker_len)
         .unwrap();
 
@@ -33,9 +32,11 @@ fn part2(stream: &Stream) {
     run(stream, 14);
 }
 
-fn main() {
-    let stream = lib::input::<Stream>("input/day6.txt").nth(0).unwrap();
+fn main() -> Result<(), anyhow::Error> {
+    let stream = &lib::input::<Stream>("input/day6.txt")?[0];
 
-    part1(&stream);
-    part2(&stream);
+    part1(stream);
+    part2(stream);
+
+    Ok(())
 }

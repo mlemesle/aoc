@@ -128,13 +128,11 @@ fn part2<'a>(rounds: impl Iterator<Item = &'a Round>) {
                     Shape::Scissors => 3,
                 }
             }
-            End::Loss => {
-                0 + match opponent_move {
-                    Shape::Rock => 3,
-                    Shape::Paper => 1,
-                    Shape::Scissors => 2,
-                }
-            }
+            End::Loss => match opponent_move {
+                Shape::Rock => 3,
+                Shape::Paper => 1,
+                Shape::Scissors => 2,
+            },
         })
         .sum::<u32>();
     println!(
@@ -143,8 +141,10 @@ fn part2<'a>(rounds: impl Iterator<Item = &'a Round>) {
     );
 }
 
-fn main() {
-    let rounds = lib::input::<Round>("input/day2.txt").collect::<Vec<_>>();
+fn main() -> Result<(), anyhow::Error> {
+    let rounds = lib::input::<Round>("input/day2.txt")?;
     part1(rounds.iter());
     part2(rounds.iter());
+
+    Ok(())
 }

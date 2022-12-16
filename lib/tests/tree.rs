@@ -1,4 +1,4 @@
-use lib::tree::BTree;
+use lib::btree::BTree;
 
 #[test]
 fn get_root() {

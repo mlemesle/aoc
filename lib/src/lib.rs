@@ -1,11 +1,11 @@
 use std::{
-    fs::File,
+    fs::{self, File},
     io::{BufRead, BufReader},
     path::Path,
     str::FromStr,
 };
 
-pub mod tree;
+pub mod btree;
 
 use anyhow::Context;
 
@@ -31,4 +31,8 @@ where
 
 pub fn input_lines(path: impl AsRef<Path>) -> impl Iterator<Item = String> {
     get_buf(path).lines().filter_map(|line| line.ok())
+}
+
+pub fn input_to_string(path: impl AsRef<Path>) -> Result<String, anyhow::Error> {
+    Ok(fs::read_to_string(path)?)
 }

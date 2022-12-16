@@ -200,7 +200,7 @@ impl<T> Node<T> {
 
 #[cfg(test)]
 mod test {
-    use crate::tree::Node;
+    use crate::btree::Node;
 
     #[test]
     fn is_leaf() {

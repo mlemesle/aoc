@@ -1,6 +1,6 @@
 use std::{ops::Add, str::FromStr};
 
-use lib::tree::{BTree, Key};
+use lib::btree::{BTree, Key};
 
 #[derive(Debug)]
 pub enum Direction {

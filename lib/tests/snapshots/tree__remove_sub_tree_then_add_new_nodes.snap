@@ -7,7 +7,7 @@ BTree {
         Some(
             Node {
                 data: "I'm root",
-                index: 0,
+                key: 0,
                 parent: None,
                 left: None,
                 right: Some(
@@ -18,7 +18,7 @@ BTree {
         Some(
             Node {
                 data: "New right child",
-                index: 1,
+                key: 1,
                 parent: Some(
                     0,
                 ),
@@ -32,7 +32,7 @@ BTree {
         Some(
             Node {
                 data: "New left child for new right child",
-                index: 3,
+                key: 3,
                 parent: Some(
                     1,
                 ),

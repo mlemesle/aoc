@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 insta = "1.21.2"
+thiserror = "1.0.37"

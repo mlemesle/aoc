@@ -6,3 +6,4 @@ edition = "2021"
 [dependencies]
 anyhow = { workspace = true }
 lib = { path = "../lib" }
+md5 = "0.7.0"

@@ -100,7 +100,7 @@ impl Position {
                     self.y = new_y;
                     Ok(())
                 } else {
-                    Err(Error::Apply(Direction::Up, self.clone()).into())
+                    Err(Error::Apply(Direction::Up, *self).into())
                 }
             }
             Direction::Down => {
@@ -109,7 +109,7 @@ impl Position {
                     self.y = new_y;
                     Ok(())
                 } else {
-                    Err(Error::Apply(Direction::Down, self.clone()).into())
+                    Err(Error::Apply(Direction::Down, *self).into())
                 }
             }
             Direction::Left => {
@@ -118,7 +118,7 @@ impl Position {
                     self.x = new_x;
                     Ok(())
                 } else {
-                    Err(Error::Apply(Direction::Left, self.clone()).into())
+                    Err(Error::Apply(Direction::Left, *self).into())
                 }
             }
             Direction::Right => {
@@ -127,7 +127,7 @@ impl Position {
                     self.x = new_x;
                     Ok(())
                 } else {
-                    Err(Error::Apply(Direction::Right, self.clone()).into())
+                    Err(Error::Apply(Direction::Right, *self).into())
                 }
             }
         }

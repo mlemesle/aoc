@@ -2,16 +2,13 @@ use std::{collections::HashMap, iter::once};
 
 use lib::{direction::Direction, error::LibResult, position::Position};
 
-fn part1(directions: &Vec<Direction>) {
+fn part1(directions: &[Direction]) {
     let visited_houses: HashMap<Position, usize> = once(Position::new(0, 0))
         .chain(
             directions
                 .iter()
                 .scan(Position::default(), |position, direction| {
-                    position
-                        .apply_direction(&direction)
-                        .and_then(|_| Ok(*position))
-                        .ok()
+                    position.apply_direction(direction).map(|_| *position).ok()
                 }),
         )
         .fold(HashMap::new(), |mut map, position| {
@@ -24,21 +21,16 @@ fn part1(directions: &Vec<Direction>) {
     println!("Thanks to Santa, {houses_visited} houses received at least one present.");
 }
 
-fn part2(directions: &Vec<Direction>) {
+fn part2(directions: &[Direction]) {
     let visited_houses: HashMap<Position, usize> = once((Position::new(0, 0), Position::new(0, 0)))
         .chain(directions.chunks_exact(2).scan(
             (Position::new(0, 0), Position::new(0, 0)),
             |(santa, robot), directions| {
                 santa
                     .apply_direction(&directions[0])
-                    .and_then(|_| Ok(*santa))
+                    .map(|_| *santa)
                     .ok()
-                    .zip(
-                        robot
-                            .apply_direction(&directions[1])
-                            .and_then(|_| Ok(*robot))
-                            .ok(),
-                    )
+                    .zip(robot.apply_direction(&directions[1]).map(|_| *robot).ok())
             },
         ))
         .fold(HashMap::new(), |mut map, (santa, robot)| {
@@ -58,7 +50,7 @@ fn part2(directions: &Vec<Direction>) {
 fn main() -> anyhow::Result<()> {
     let directions = lib::input_to_string("input/day3.txt")?
         .chars()
-        .map(|c| Direction::try_from(c))
+        .map(Direction::try_from)
         .collect::<LibResult<Vec<Direction>>>()?;
 
     part1(&directions);

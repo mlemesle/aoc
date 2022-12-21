@@ -4,7 +4,7 @@ fn do_split(s: &str) -> Vec<&str> {
     s.split('x').collect()
 }
 
-fn part1(presents: &Vec<Array<3, usize>>) {
+fn part1(presents: &[Array<3, usize>]) {
     let paper_needed: usize = presents
         .iter()
         .map(|present| {
@@ -18,7 +18,7 @@ fn part1(presents: &Vec<Array<3, usize>>) {
     println!("They should order {paper_needed} square feet of paper.");
 }
 
-fn part2(presents: &Vec<Array<3, usize>>) {
+fn part2(presents: &[Array<3, usize>]) {
     let ribbon_length: usize = presents
         .iter()
         .map(|present| -> usize {

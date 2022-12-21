@@ -40,8 +40,8 @@ where
             .map(|elem| elem.parse().map_err(|_| LibError::from(Error::New)));
 
         let mut arr = [T::default(); SIZE];
-        for i in 0..SIZE {
-            arr[i] = match iter.next() {
+        for item in &mut arr {
+            *item = match iter.next() {
                 Some(elem) => elem?,
                 None => return Err(LibError::from(Error::New)),
             }

@@ -102,7 +102,7 @@ impl<T> Grid<T> {
             Err(LibError::from(Error::InvalidPosition(top_left)))
         } else if bottom_right.x() >= self.nb_col || bottom_right.y() >= self.nb_row {
             Err(LibError::from(Error::InvalidPosition(bottom_right)))
-        } else if top_left.x() >= bottom_right.x() || top_left.y() >= bottom_right.y() {
+        } else if top_left.x() > bottom_right.x() || top_left.y() > bottom_right.y() {
             Err(LibError::from(Error::InvalidRectangle(
                 top_left,
                 bottom_right,
@@ -117,6 +117,40 @@ impl<T> Grid<T> {
                         .take(bottom_right.x() - top_left.x() + 1)
                 }))
         }
+    }
+
+    pub fn iter_rect_mut(
+        &mut self,
+        top_left: Position,
+        bottom_right: Position,
+    ) -> LibResult<impl Iterator<Item = &mut T>> {
+        if top_left.x() >= self.nb_col || top_left.y() >= self.nb_row {
+            Err(LibError::from(Error::InvalidPosition(top_left)))
+        } else if bottom_right.x() >= self.nb_col || bottom_right.y() >= self.nb_row {
+            Err(LibError::from(Error::InvalidPosition(bottom_right)))
+        } else if top_left.x() > bottom_right.x() || top_left.y() > bottom_right.y() {
+            Err(LibError::from(Error::InvalidRectangle(
+                top_left,
+                bottom_right,
+            )))
+        } else {
+            Ok(self.grid
+                [top_left.y() * self.nb_col..(bottom_right.y() * self.nb_col + self.nb_col)]
+                .chunks_exact_mut(self.nb_col)
+                .flat_map(move |row| {
+                    row.iter_mut()
+                        .skip(top_left.x())
+                        .take(bottom_right.x() - top_left.x() + 1)
+                }))
+        }
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = &T> {
+        self.grid.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
+        self.grid.iter_mut()
     }
 }
 
@@ -417,17 +451,14 @@ mod test {
 
         // When top_left and bottom_right are on the same column.
         let (pos1, pos2) = (Position::new(2, 1), Position::new(2, 5));
-        assert!(matches!(
-            g.iter_rect(pos1, pos2),
-            Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
-        ));
+        assert_eq!(
+            g.iter_rect(pos1, pos2)?.collect::<Vec<_>>(),
+            vec![&6, &9, &12, &15, &18]
+        );
 
         // When top_left and bottom_right are on the same row.
         let (pos1, pos2) = (Position::new(1, 2), Position::new(2, 2));
-        assert!(matches!(
-            g.iter_rect(pos1, pos2),
-            Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
-        ));
+        assert_eq!(g.iter_rect(pos1, pos2)?.collect::<Vec<_>>(), vec![&8, &9]);
 
         // When "top_left" and "bottom_right" are inverted.
         let (pos1, pos2) = (Position::new(2, 5), Position::new(1, 3));
@@ -435,6 +466,111 @@ mod test {
             g.iter_rect(pos1, pos2),
             Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
         ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn iter_rect_mut() -> anyhow::Result<()> {
+        let mut g = Grid::try_from((
+            vec![
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            ],
+            3,
+        ))?;
+
+        assert_eq!(
+            g.iter_rect_mut(Position::new(1, 3), Position::new(2, 5))?
+                .collect::<Vec<_>>(),
+            vec![&mut 11, &mut 12, &mut 14, &mut 15, &mut 17, &mut 18]
+        );
+        assert_eq!(
+            g.iter_rect_mut(Position::new(0, 1), Position::new(2, 3))?
+                .collect::<Vec<_>>(),
+            vec![&mut 4, &mut 5, &mut 6, &mut 7, &mut 8, &mut 9, &mut 10, &mut 11, &mut 12]
+        );
+
+        // When top_left is out of grid.
+        let (pos1, pos2) = (Position::new(1, 7), Position::new(3, 5));
+        assert!(matches!(
+            g.iter_rect_mut(pos1, pos2),
+            Err(LibError::Grid(Error::InvalidPosition(_pos1)))
+        ));
+        let (pos1, pos2) = (Position::new(4, 1), Position::new(3, 5));
+        assert!(matches!(
+            g.iter_rect_mut(pos1, pos2),
+            Err(LibError::Grid(Error::InvalidPosition(_pos1)))
+        ));
+
+        // When bottom_right is out of grid.
+        let (pos1, pos2) = (Position::new(1, 1), Position::new(3, 7));
+        assert!(matches!(
+            g.iter_rect_mut(pos1, pos2),
+            Err(LibError::Grid(Error::InvalidPosition(_pos2)))
+        ));
+        let (pos1, pos2) = (Position::new(1, 1), Position::new(3, 7));
+        assert!(matches!(
+            g.iter_rect_mut(pos1, pos2),
+            Err(LibError::Grid(Error::InvalidPosition(_pos2)))
+        ));
+
+        // When top_left and bottom_right are on the same column.
+        let (pos1, pos2) = (Position::new(2, 1), Position::new(2, 5));
+        assert_eq!(
+            g.iter_rect_mut(pos1, pos2)?.collect::<Vec<_>>(),
+            vec![&mut 6, &mut 9, &mut 12, &mut 15, &mut 18]
+        );
+
+        // When top_left and bottom_right are on the same row.
+        let (pos1, pos2) = (Position::new(1, 2), Position::new(2, 2));
+        assert_eq!(
+            g.iter_rect_mut(pos1, pos2)?.collect::<Vec<_>>(),
+            vec![&mut 8, &mut 9]
+        );
+
+        // When "top_left" and "bottom_right" are inverted.
+        let (pos1, pos2) = (Position::new(2, 5), Position::new(1, 3));
+        assert!(matches!(
+            g.iter_rect_mut(pos1, pos2),
+            Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn iter() -> anyhow::Result<()> {
+        let g = Grid::try_from((
+            vec![
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            ],
+            3,
+        ))?;
+
+        assert_eq!(
+            g.iter().collect::<Vec<_>>(),
+            vec![&1, &2, &3, &4, &5, &6, &7, &8, &9, &10, &11, &12, &13, &14, &15, &16, &17, &18,]
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn iter_mut() -> anyhow::Result<()> {
+        let mut g = Grid::try_from((
+            vec![
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            ],
+            3,
+        ))?;
+
+        assert_eq!(
+            g.iter_mut().collect::<Vec<_>>(),
+            vec![
+                &mut 1, &mut 2, &mut 3, &mut 4, &mut 5, &mut 6, &mut 7, &mut 8, &mut 9, &mut 10,
+                &mut 11, &mut 12, &mut 13, &mut 14, &mut 15, &mut 16, &mut 17, &mut 18,
+            ]
+        );
 
         Ok(())
     }

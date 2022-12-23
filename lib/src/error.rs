@@ -2,7 +2,7 @@
 
 use thiserror::Error;
 
-use crate::{array, direction, position};
+use crate::{array, direction, grid, nposition, position};
 
 /// Global Error type for the library.
 #[derive(Error, Debug)]
@@ -11,9 +11,13 @@ pub enum LibError {
     Array(array::Error),
     #[error(transparent)]
     Direction(direction::Error),
-    /// Error coming from the `position` module.
     #[error(transparent)]
     Position(position::Error),
+    #[error(transparent)]
+    Grid(grid::Error),
+    /// Error coming from the `position` module.
+    #[error(transparent)]
+    NPosition(nposition::Error),
 }
 
 /// Reexport of the `Result` type, locking the error type.

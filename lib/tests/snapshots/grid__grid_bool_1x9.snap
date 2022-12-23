@@ -1,0 +1,16 @@
+---
+source: lib/tests/grid.rs
+expression: g
+---
+---
+|[32mt[0m|
+|[32mt[0m|
+|[31mf[0m|
+|[31mf[0m|
+|[32mt[0m|
+|[31mf[0m|
+|[31mf[0m|
+|[32mt[0m|
+|[31mf[0m|
+---
+

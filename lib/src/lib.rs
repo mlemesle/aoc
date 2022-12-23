@@ -11,6 +11,8 @@ pub mod array;
 pub mod btree;
 pub mod direction;
 pub mod error;
+pub mod grid;
+pub mod nposition;
 pub mod position;
 
 use anyhow::Context;

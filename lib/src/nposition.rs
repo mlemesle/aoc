@@ -14,13 +14,13 @@ pub enum Error {
     #[error("invalid tuple for creation")]
     Create,
     #[error("can't apply {0:?} to {1:?}")]
-    Apply(Direction, Position),
+    Apply(Direction, NPosition),
 }
 
 /// Easily creates LibError with the desired variant.
 impl From<Error> for LibError {
     fn from(value: Error) -> Self {
-        LibError::Position(value)
+        LibError::NPosition(value)
     }
 }
 
@@ -28,17 +28,17 @@ impl From<Error> for LibError {
 /// * x is the horizontal coordinate,
 /// * y is the vertical coordinate.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
-pub struct Position {
-    x: usize,
-    y: usize,
+pub struct NPosition {
+    x: isize,
+    y: isize,
 }
 
 /// Try to create a Position from a given tuple of two heterogenous elements.
-/// Both elements must be `TryInto<usize>`.
-impl<T, U> TryFrom<(T, U)> for Position
+/// Both elements must be `TryInto<isize>`.
+impl<T, U> TryFrom<(T, U)> for NPosition
 where
-    T: TryInto<usize>,
-    U: TryInto<usize>,
+    T: TryInto<isize>,
+    U: TryInto<isize>,
 {
     type Error = LibError;
 
@@ -50,14 +50,14 @@ where
     }
 }
 
-impl Position {
+impl NPosition {
     /// Creates a new Position from x - y coordinates.
     /// ```rust
     ///    use lib::position::Position;
     ///
     ///    let pos = Position::new(1, 2);
     /// ```
-    pub fn new(x: usize, y: usize) -> Self {
+    pub fn new(x: isize, y: isize) -> Self {
         Self { x, y }
     }
 
@@ -68,7 +68,7 @@ impl Position {
     ///    let pos = Position::new(1, 2);
     ///    assert_eq!(1, pos.x());
     /// ```
-    pub fn x(&self) -> usize {
+    pub fn x(&self) -> isize {
         self.x
     }
 
@@ -79,7 +79,7 @@ impl Position {
     ///    let pos = Position::new(1, 2);
     ///    assert_eq!(2, pos.y());
     /// ```
-    pub fn y(&self) -> usize {
+    pub fn y(&self) -> isize {
         self.y
     }
 
@@ -139,24 +139,19 @@ mod test {
 
     use crate::{direction::Direction, error::LibError};
 
-    use super::{Error, Position};
+    use super::{Error, NPosition};
 
     #[test]
     fn try_from() {
-        let pos1 = Position::try_from((-1i8, -2i32));
-        assert!(matches!(pos1, Err(LibError::Position(Error::Create))));
-        let pos2 = Position::try_from((-1i8, 2u32));
-        assert!(matches!(pos2, Err(LibError::Position(Error::Create))));
-        let pos3 = Position::try_from((1i8, -3i8));
-        assert!(matches!(pos3, Err(LibError::Position(Error::Create))));
-        let pos4 = Position::try_from((1i8, 2u32));
-        assert!(matches!(pos4, Ok(Position { x: 1, y: 2 })));
+        let pos = NPosition::try_from((-1i8, 2u32));
+
+        assert!(matches!(pos, Ok(NPosition { x: -1, y: 2 })));
     }
 
     #[test]
     fn apply_direction() {
         // Trivial tests
-        let mut pos = Position::default();
+        let mut pos = NPosition::default();
         assert!(pos.apply_direction(&Direction::Up).is_ok());
         assert_eq!((pos.x(), pos.y()), (0, 1));
         assert!(pos.apply_direction(&Direction::Right).is_ok());
@@ -167,50 +162,50 @@ mod test {
         assert_eq!((pos.x(), pos.y()), (0, 0));
 
         // Limit testing
-        let mut pos = Position::new(usize::MIN, 0);
+        let mut pos = NPosition::new(isize::MIN, 0);
         assert!(matches!(
             pos.apply_direction(&Direction::Left),
-            Err(LibError::Position(Error::Apply(
+            Err(LibError::NPosition(Error::Apply(
                 Direction::Left,
-                Position {
-                    x: usize::MIN,
+                NPosition {
+                    x: isize::MIN,
                     y: 0,
                 },
             )))
         ));
 
-        let mut pos = Position::new(usize::MAX, 0);
+        let mut pos = NPosition::new(isize::MAX, 0);
         assert!(matches!(
             pos.apply_direction(&Direction::Right),
-            Err(LibError::Position(Error::Apply(
+            Err(LibError::NPosition(Error::Apply(
                 Direction::Right,
-                Position {
-                    x: usize::MAX,
+                NPosition {
+                    x: isize::MAX,
                     y: 0,
                 },
             )))
         ));
 
-        let mut pos = Position::new(0, usize::MIN);
+        let mut pos = NPosition::new(0, isize::MIN);
         assert!(matches!(
             pos.apply_direction(&Direction::Down),
-            Err(LibError::Position(Error::Apply(
+            Err(LibError::NPosition(Error::Apply(
                 Direction::Down,
-                Position {
+                NPosition {
                     x: 0,
-                    y: usize::MIN,
+                    y: isize::MIN,
                 },
             )))
         ));
 
-        let mut pos = Position::new(0, usize::MAX);
+        let mut pos = NPosition::new(0, isize::MAX);
         assert!(matches!(
             pos.apply_direction(&Direction::Up),
-            Err(LibError::Position(Error::Apply(
+            Err(LibError::NPosition(Error::Apply(
                 Direction::Up,
-                Position {
+                NPosition {
                     x: 0,
-                    y: usize::MAX,
+                    y: isize::MAX,
                 },
             )))
         ));

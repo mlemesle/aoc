@@ -2,22 +2,23 @@
 
 use thiserror::Error;
 
-use crate::{array, direction, grid, nposition, position};
+use crate::{direction, grid, nposition, position};
 
 /// Global Error type for the library.
 #[derive(Error, Debug)]
 pub enum LibError {
-    #[error(transparent)]
-    Array(array::Error),
+    /// Wrapping Direction's error.
     #[error(transparent)]
     Direction(direction::Error),
-    #[error(transparent)]
-    Position(position::Error),
+    /// Wrapping Grid's error.
     #[error(transparent)]
     Grid(grid::Error),
-    /// Error coming from the `position` module.
+    /// Wrapping NPosition's error.
     #[error(transparent)]
     NPosition(nposition::Error),
+    /// Wrapping Position's error.
+    #[error(transparent)]
+    Position(position::Error),
 }
 
 /// Reexport of the `Result` type, locking the error type.

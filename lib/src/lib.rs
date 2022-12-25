@@ -1,3 +1,4 @@
+#![warn(missing_docs)]
 //! Library created to abtract types and their principal uses for [https://adventofcode.com](AoC).
 
 use std::{
@@ -7,7 +8,6 @@ use std::{
     str::FromStr,
 };
 
-pub mod array;
 pub mod btree;
 pub mod direction;
 pub mod error;

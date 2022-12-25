@@ -1,16 +1,16 @@
-use lib::array::Array;
+fn do_split(s: &str) -> [usize; 3] {
+    let t = s.split('x').map(|n| n.parse().unwrap()).collect::<Vec<_>>();
 
-fn do_split(s: &str) -> Vec<&str> {
-    s.split('x').collect()
+    [t[0], t[1], t[2]]
 }
 
-fn part1(presents: &[Array<3, usize>]) {
+fn part1(presents: &[[usize; 3]]) {
     let paper_needed: usize = presents
         .iter()
         .map(|present| {
-            let side1 = present.get(0) * present.get(1);
-            let side2 = present.get(1) * present.get(2);
-            let side3 = present.get(0) * present.get(2);
+            let side1 = present[0] * present[1];
+            let side2 = present[1] * present[2];
+            let side3 = present[0] * present[2];
             2 * side1 + 2 * side2 + 2 * side3 + [side1, side2, side3].iter().min().unwrap()
         })
         .sum();
@@ -18,18 +18,15 @@ fn part1(presents: &[Array<3, usize>]) {
     println!("They should order {paper_needed} square feet of paper.");
 }
 
-fn part2(presents: &[Array<3, usize>]) {
+fn part2(presents: &[[usize; 3]]) {
     let ribbon_length: usize = presents
         .iter()
         .map(|present| -> usize {
-            let mut sides = [present.get(0), present.get(1), present.get(2)];
-            sides.sort();
-            let sides: usize = sides.iter().take(2).map(|n| *n * 2).sum();
+            let mut present = present.clone();
+            present.sort();
+            let sides: usize = present.iter().take(2).map(|n| *n * 2).sum();
 
-            sides
-                + [*present.get(0), *present.get(1), *present.get(2)]
-                    .iter()
-                    .product::<usize>()
+            sides + present.iter().product::<usize>()
         })
         .sum();
 
@@ -38,8 +35,8 @@ fn part2(presents: &[Array<3, usize>]) {
 
 fn main() -> anyhow::Result<()> {
     let presents: Vec<_> = lib::input_lines("input/day2.txt")
-        .map(|line| Array::<3, usize>::new(&line, do_split))
-        .collect::<Result<Vec<_>, _>>()?;
+        .map(|line| do_split(&line))
+        .collect::<Vec<_>>();
 
     part1(&presents);
     part2(&presents);

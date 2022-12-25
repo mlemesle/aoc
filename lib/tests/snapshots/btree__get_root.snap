@@ -1,0 +1,20 @@
+---
+source: lib/tests/btree.rs
+expression: tree
+---
+BTree {
+    nodes: [
+        Some(
+            Node {
+                data: "Yay",
+                key: Key(
+                    0,
+                ),
+                parent: None,
+                left: None,
+                right: None,
+            },
+        ),
+    ],
+    empty_cells: [],
+}

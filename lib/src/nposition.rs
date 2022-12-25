@@ -1,4 +1,4 @@
-//! Position module. Can easily creates and interact with others types from the library.
+//! NPosition module. Can easily creates and interact with others types from the library.
 
 use thiserror::Error;
 
@@ -7,12 +7,13 @@ use crate::{
     error::{LibError, LibResult},
 };
 
-/// `position` module inner error. Must be wrapped in LibError before being raised.
+/// `nposition` module inner error. Must be wrapped in LibError before being raised.
 #[derive(Error, Debug)]
 pub enum Error {
-    /// Raised when Position can't be created from the input.
+    /// Raised when NPosition can't be created from the input.
     #[error("invalid tuple for creation")]
     Create,
+    /// Raised when `Direction` can't be applied to `NPosition`.
     #[error("can't apply {0:?} to {1:?}")]
     Apply(Direction, NPosition),
 }
@@ -24,7 +25,8 @@ impl From<Error> for LibError {
     }
 }
 
-/// Position represents a position in a 2D environment.
+/// NPosition represents a position in a 2D environment.
+/// The coordinates are relative and can be negative.
 /// * x is the horizontal coordinate,
 /// * y is the vertical coordinate.
 #[derive(Debug, PartialEq, Eq, Clone, Copy, Default, Hash)]
@@ -33,7 +35,7 @@ pub struct NPosition {
     y: isize,
 }
 
-/// Try to create a Position from a given tuple of two heterogenous elements.
+/// Try to create a NPosition from a given tuple of two heterogenous elements.
 /// Both elements must be `TryInto<isize>`.
 impl<T, U> TryFrom<(T, U)> for NPosition
 where
@@ -51,46 +53,46 @@ where
 }
 
 impl NPosition {
-    /// Creates a new Position from x - y coordinates.
+    /// Creates a new NPosition from x - y coordinates.
     /// ```rust
-    ///    use lib::position::Position;
+    ///    use lib::nposition::NPosition;
     ///
-    ///    let pos = Position::new(1, 2);
+    ///    let pos = NPosition::new(-1, 2);
     /// ```
     pub fn new(x: isize, y: isize) -> Self {
         Self { x, y }
     }
 
-    /// Retrieves the x coordinate of the position.
+    /// Retrieves the x coordinate of the NPosition.
     /// ```rust
-    ///    use lib::position::Position;
+    ///    use lib::nposition::NPosition;
     ///
-    ///    let pos = Position::new(1, 2);
-    ///    assert_eq!(1, pos.x());
+    ///    let pos = NPosition::new(-1, 2);
+    ///    assert_eq!(-1, pos.x());
     /// ```
     pub fn x(&self) -> isize {
         self.x
     }
 
-    /// Retrieves the y coordinate of the position.
+    /// Retrieves the y coordinate of the NPosition.
     /// ```rust
-    ///    use lib::position::Position;
+    ///    use lib::nposition::NPosition;
     ///
-    ///    let pos = Position::new(1, 2);
+    ///    let pos = NPosition::new(-1, 2);
     ///    assert_eq!(2, pos.y());
     /// ```
     pub fn y(&self) -> isize {
         self.y
     }
 
-    /// Applies a `Direction` to the `Position`, ie. moves to the said direction, if possible.
+    /// Applies a `Direction` to the `NPosition`, ie. moves to the said direction, if possible.
     /// ```rust
-    ///    use lib::{position::Position, direction::Direction};
+    ///    use lib::{nposition::NPosition, direction::Direction};
     ///
-    ///    let mut pos = Position::default();
-    ///    let res = pos.apply_direction(&Direction::Up);
+    ///    let mut pos = NPosition::default();
+    ///    let res = pos.apply_direction(&Direction::Down);
     ///    assert!(res.is_ok());
-    ///    assert_eq!(pos, Position::new(0, 1));
+    ///    assert_eq!(pos, NPosition::new(0, -1));
     /// ```
     pub fn apply_direction(&mut self, direction: &Direction) -> LibResult<()> {
         match direction {

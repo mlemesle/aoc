@@ -10,16 +10,22 @@ use crate::{
     position::Position,
 };
 
+/// Error regarding Grid manipulations.
 #[derive(Error, Debug)]
 pub enum Error {
+    /// Interacting with an invalid row.
     #[error("{0} is an invalid row")]
     InvalidRow(usize),
+    /// Interacting with an invalid column.
     #[error("{0} is an invalid col")]
     InvalidCol(usize),
+    /// Interacting with an invalid position.
     #[error("{0:?} can't be reached")]
     InvalidPosition(Position),
+    /// Interacting with an invalid rectangle.
     #[error("{0:?} and {1:?} can't be used to draw a rectangle")]
     InvalidRectangle(Position, Position),
+    /// Raised when an error occured while using the TryFrom impl.
     #[error("can't create Grid, Vec size doesn't correspond")]
     TryFrom,
 }
@@ -30,6 +36,7 @@ impl From<Error> for LibError {
     }
 }
 
+/// A two dimension Grid, with fancy and easy to use methods.
 #[derive(Debug)]
 pub struct Grid<T> {
     grid: Vec<T>,
@@ -37,6 +44,8 @@ pub struct Grid<T> {
     nb_col: usize,
 }
 
+/// TryFrom implementation to create a Grid. The second parameter is the width, ie. the number of columns.
+/// The Vec must hold the exact number of elements to fill all rows. This means that Vec<T>.len() = cols * rows.
 impl<T> TryFrom<(Vec<T>, usize)> for Grid<T> {
     type Error = LibError;
 
@@ -55,6 +64,16 @@ impl<T> TryFrom<(Vec<T>, usize)> for Grid<T> {
 }
 
 impl<T> Grid<T> {
+    /// Retrieves a reference to data at a given position. Error is raised if the position is out of the [Grid].
+    /// Example
+    /// ```rust
+    ///    use lib::{grid::Grid, position::Position};
+    ///
+    ///    let grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.get(&Position::new(1, 1)).unwrap(), &5);
+    /// ```
     pub fn get(&self, pos: &Position) -> LibResult<&T> {
         (pos.x() < self.nb_col && pos.y() < self.nb_row)
             .then(|| self.grid.get(pos.y() * self.nb_col + pos.x()))
@@ -62,6 +81,16 @@ impl<T> Grid<T> {
             .ok_or_else(|| LibError::from(Error::InvalidPosition(*pos)))
     }
 
+    /// Retrieves a mutable reference to data at a given position. Error is raised if the position is out of the [Grid].
+    /// Example
+    /// ```rust
+    ///    use lib::{grid::Grid, position::Position};
+    ///
+    ///    let mut grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.get_mut(&Position::new(1, 1)).unwrap(), &mut 5);
+    /// ```
     pub fn get_mut(&mut self, pos: &Position) -> LibResult<&mut T> {
         (pos.x() < self.nb_col && pos.y() < self.nb_row)
             .then(|| self.grid.get_mut(pos.y() * self.nb_col + pos.x()))
@@ -69,30 +98,81 @@ impl<T> Grid<T> {
             .ok_or_else(|| LibError::from(Error::InvalidPosition(*pos)))
     }
 
+    /// Yields an [Iterator] of references over the row `row`. Error is raised if the row doesn't exist.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_row(1).unwrap().collect::<Vec<_>>(), vec![&4, &5, &6]);
+    /// ```
     pub fn iter_row(&self, row: usize) -> LibResult<impl Iterator<Item = &T>> {
         (row < self.nb_row)
             .then(|| self.grid[row * self.nb_col..(row * self.nb_col + self.nb_col)].iter())
             .ok_or_else(|| LibError::from(Error::InvalidRow(row)))
     }
 
+    /// Yields an [Iterator] of mutable references over the row `row`. Error is raised if the row doesn't exist.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let mut grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_row_mut(1).unwrap().collect::<Vec<_>>(), vec![&mut 4, &mut 5, &mut 6]);
+    /// ```
     pub fn iter_row_mut(&mut self, row: usize) -> LibResult<impl Iterator<Item = &mut T>> {
         (row < self.nb_row)
             .then(|| self.grid[row * self.nb_col..(row * self.nb_col + self.nb_col)].iter_mut())
             .ok_or_else(|| LibError::from(Error::InvalidRow(row)))
     }
 
+    /// Yields an [Iterator| of references over the column `col`. Error is raised if the column doesn't exist.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_col(1).unwrap().collect::<Vec<_>>(), vec![&2, &5, &8]);
+    /// ```
     pub fn iter_col(&self, col: usize) -> LibResult<impl Iterator<Item = &T>> {
         (col < self.nb_col)
             .then(|| self.grid.iter().skip(col).step_by(self.nb_col))
             .ok_or_else(|| LibError::from(Error::InvalidCol(col)))
     }
 
+    /// Yields an [Iterator| of mutable references over the column `col`. Error is raised if the column doesn't exist.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let mut grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_col_mut(1).unwrap().collect::<Vec<_>>(), vec![&mut 2, &mut 5, &mut 8]);
+    /// ```
     pub fn iter_col_mut(&mut self, col: usize) -> LibResult<impl Iterator<Item = &mut T>> {
         (col < self.nb_col)
             .then(|| self.grid.iter_mut().skip(col).step_by(self.nb_col))
             .ok_or_else(|| LibError::from(Error::InvalidCol(col)))
     }
 
+    /// Yields an [Iterator] of references over the rectangle defined by `top_left` and `bottom_right` positions.
+    /// Error is raised if either one of the position is out of the [Grid] or they are miss placed relatively to each other.
+    /// Example
+    /// ```rust
+    ///    use lib::{grid::Grid, position::Position};
+    ///
+    ///    let grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_rect(Position::new(1, 1), Position::new(2, 2)).unwrap().collect::<Vec<_>>(), vec![&5, &6, &8, &9]);
+    /// ```
     pub fn iter_rect(
         &self,
         top_left: Position,
@@ -119,6 +199,17 @@ impl<T> Grid<T> {
         }
     }
 
+    /// Yields an [Iterator] of mutable references over the rectangle defined by `top_left` and `bottom_right` positions.
+    /// Error is raised if either one of the position is out of the [Grid] or they are miss placed relatively to each other.
+    /// Example
+    /// ```rust
+    ///    use lib::{grid::Grid, position::Position};
+    ///
+    ///    let mut grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_rect_mut(Position::new(1, 1), Position::new(2, 2)).unwrap().collect::<Vec<_>>(), vec![&mut 5, &mut 6, &mut 8, &mut 9]);
+    /// ```
     pub fn iter_rect_mut(
         &mut self,
         top_left: Position,
@@ -145,10 +236,34 @@ impl<T> Grid<T> {
         }
     }
 
+    /// Yields an [Iterator| of references over the whole [Grid]. The data is traversed row by row.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter().collect::<Vec<_>>(), vec![
+    ///            &1, &2, &3, &4, &5, &6, &7, &8, &9
+    ///        ]);
+    /// ```
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.grid.iter()
     }
 
+    /// Yields an [Iterator| of mutable references over the whole [Grid]. The data is traversed row by row.
+    /// Example
+    /// ```rust
+    ///    use lib::grid::Grid;
+    ///
+    ///    let mut grid = Grid::try_from((vec![
+    ///            1, 2, 3, 4, 5, 6, 7, 8, 9
+    ///        ], 3)).unwrap();
+    ///    assert_eq!(grid.iter_mut().collect::<Vec<_>>(), vec![
+    ///            &mut 1, &mut 2, &mut 3, &mut 4, &mut 5, &mut 6, &mut 7, &mut 8, &mut 9
+    ///        ]);
+    /// ```
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut T> {
         self.grid.iter_mut()
     }
@@ -467,6 +582,10 @@ mod test {
             Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
         ));
 
+        // When "top_left" and "bottom_right" are the same.
+        let (pos1, pos2) = (Position::new(2, 3), Position::new(2, 3));
+        assert_eq!(g.iter_rect(pos1, pos2)?.collect::<Vec<_>>(), vec![&12]);
+
         Ok(())
     }
 
@@ -534,6 +653,13 @@ mod test {
             g.iter_rect_mut(pos1, pos2),
             Err(LibError::Grid(Error::InvalidRectangle(_pos1, _pos2)))
         ));
+
+        // When "top_left" and "bottom_right" are the same.
+        let (pos1, pos2) = (Position::new(2, 3), Position::new(2, 3));
+        assert_eq!(
+            g.iter_rect_mut(pos1, pos2)?.collect::<Vec<_>>(),
+            vec![&mut 12]
+        );
 
         Ok(())
     }

@@ -1,0 +1,58 @@
+---
+source: lib/tests/btree.rs
+expression: tree
+---
+BTree {
+    nodes: [
+        Some(
+            Node {
+                data: "I'm root",
+                key: Key(
+                    0,
+                ),
+                parent: None,
+                left: None,
+                right: Some(
+                    Key(
+                        1,
+                    ),
+                ),
+            },
+        ),
+        Some(
+            Node {
+                data: "Right child",
+                key: Key(
+                    1,
+                ),
+                parent: Some(
+                    Key(
+                        0,
+                    ),
+                ),
+                left: None,
+                right: Some(
+                    Key(
+                        2,
+                    ),
+                ),
+            },
+        ),
+        Some(
+            Node {
+                data: "Right child's right child",
+                key: Key(
+                    2,
+                ),
+                parent: Some(
+                    Key(
+                        1,
+                    ),
+                ),
+                left: None,
+                right: None,
+            },
+        ),
+    ],
+    empty_cells: [],
+}

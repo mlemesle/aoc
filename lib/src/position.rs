@@ -13,6 +13,7 @@ pub enum Error {
     /// Raised when Position can't be created from the input.
     #[error("invalid tuple for creation")]
     Create,
+    /// Raised when `Direction`can't be applied to `Position`.
     #[error("can't apply {0:?} to {1:?}")]
     Apply(Direction, Position),
 }

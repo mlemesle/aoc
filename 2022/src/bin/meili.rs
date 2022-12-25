@@ -46,8 +46,8 @@ impl Add<House> for BTree<Option<String>> {
 
         for direction in house.path {
             current = match direction {
-                Direction::L => self.get_or_add_left(None, current),
-                Direction::R => self.get_or_add_right(None, current),
+                Direction::L => self.get_or_add_left(None, &current),
+                Direction::R => self.get_or_add_right(None, &current),
             }
         }
 

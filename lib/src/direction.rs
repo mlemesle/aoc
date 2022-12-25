@@ -1,11 +1,13 @@
-//! Direction module.
+//! Direction module. Used to interact with various types.
 
 use thiserror::Error;
 
 use crate::error::LibError;
 
+/// Error regarding Direction manipulations.
 #[derive(Error, Debug)]
 pub enum Error {
+    /// Raised when an error occured while parsing from char.
     #[error("invalid char `{0}`")]
     TryFromChar(char),
 }

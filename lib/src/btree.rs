@@ -295,9 +295,9 @@ mod test {
             right: Some(Key::new(1)),
         };
 
-        assert_eq!(node1.is_leaf(), true);
-        assert_eq!(node2.is_leaf(), false);
-        assert_eq!(node3.is_leaf(), false);
-        assert_eq!(node4.is_leaf(), false);
+        assert!(node1.is_leaf());
+        assert!(!node2.is_leaf());
+        assert!(!node3.is_leaf());
+        assert!(!node4.is_leaf());
     }
 }

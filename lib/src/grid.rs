@@ -336,7 +336,7 @@ mod test {
         ));
 
         // Can create a Grid with 3 rows.
-        let g5 = Grid::try_from((grid_elems.clone(), 9));
+        let g5 = Grid::try_from((grid_elems, 9));
         assert!(matches!(
             g5,
             Ok(Grid {

@@ -63,7 +63,7 @@ fn part1(instr_and_pos: &[InstrAndPos]) -> anyhow::Result<()> {
             Instruction::TurnOff => |b: &mut bool| *b = false,
         };
         grid.iter_rect_mut(instr.top_left, instr.bottom_right)?
-            .for_each(|b| func(b));
+            .for_each(func);
     }
 
     let lit_lights = grid.iter().filter(|&b| *b).count();
@@ -83,7 +83,7 @@ fn part2(instr_and_pos: &[InstrAndPos]) -> anyhow::Result<()> {
             Instruction::TurnOff => |u: &mut usize| *u = u.saturating_sub(1),
         };
         grid.iter_rect_mut(instr.top_left, instr.bottom_right)?
-            .for_each(|b| func(b));
+            .for_each(func);
     }
 
     let total_brightness: usize = grid.iter().sum();

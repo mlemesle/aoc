@@ -1,4 +1,4 @@
-#![warn(missing_docs)]
+#![deny(missing_docs)]
 //! Library created to abtract types and their principal uses for [https://adventofcode.com](AoC).
 
 use std::{

@@ -18,11 +18,10 @@ fn part1(presents: &[[usize; 3]]) {
     println!("They should order {paper_needed} square feet of paper.");
 }
 
-fn part2(presents: &[[usize; 3]]) {
+fn part2(presents: &mut [[usize; 3]]) {
     let ribbon_length: usize = presents
-        .iter()
+        .iter_mut()
         .map(|present| -> usize {
-            let mut present = present.clone();
             present.sort();
             let sides: usize = present.iter().take(2).map(|n| *n * 2).sum();
 
@@ -34,12 +33,12 @@ fn part2(presents: &[[usize; 3]]) {
 }
 
 fn main() -> anyhow::Result<()> {
-    let presents: Vec<_> = lib::input_lines("input/day2.txt")
+    let mut presents: Vec<_> = lib::input_lines("input/day2.txt")
         .map(|line| do_split(&line))
         .collect::<Vec<_>>();
 
     part1(&presents);
-    part2(&presents);
+    part2(&mut presents);
 
     Ok(())
 }

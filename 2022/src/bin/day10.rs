@@ -91,7 +91,7 @@ impl Cpu {
     }
 }
 
-fn part1(instructions: &Vec<Instruction>) {
+fn part1(instructions: &[Instruction]) {
     let mut cpu = Cpu::new();
 
     let sum: isize = instructions
@@ -102,7 +102,7 @@ fn part1(instructions: &Vec<Instruction>) {
     println!("The sum of these six signal strengths is {sum}");
 }
 
-fn part2(instructions: &Vec<Instruction>) {
+fn part2(instructions: &[Instruction]) {
     let mut cpu = Cpu::new();
 
     instructions

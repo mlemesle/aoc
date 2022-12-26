@@ -18,7 +18,7 @@ impl FromStr for Motion {
     type Err = anyhow::Error;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let motion = match s.split_once(" ") {
+        let motion = match s.split_once(' ') {
             Some(("U", len)) => Self {
                 direction: Direction::U,
                 len: len.parse()?,
@@ -63,15 +63,15 @@ impl Position {
 
     fn join(&mut self, to_join: Self) {
         if !self.is_adjacent_to(to_join) {
-            if self.0 > to_join.0 {
-                self.0 -= 1;
-            } else if self.0 < to_join.0 {
-                self.0 += 1;
+            match self.0.cmp(&to_join.0) {
+                std::cmp::Ordering::Less => self.0 += 1,
+                std::cmp::Ordering::Equal => (),
+                std::cmp::Ordering::Greater => self.0 -= 1,
             }
-            if self.1 > to_join.1 {
-                self.1 -= 1;
-            } else if self.1 < to_join.1 {
-                self.1 += 1;
+            match self.1.cmp(&to_join.1) {
+                std::cmp::Ordering::Less => self.1 += 1,
+                std::cmp::Ordering::Equal => (),
+                std::cmp::Ordering::Greater => self.1 -= 1,
             }
         }
     }

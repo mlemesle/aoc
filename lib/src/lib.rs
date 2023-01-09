@@ -13,6 +13,7 @@ pub mod direction;
 pub mod error;
 pub mod grid;
 pub mod nposition;
+pub mod permutation;
 pub mod position;
 
 use anyhow::Context;

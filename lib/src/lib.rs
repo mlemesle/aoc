@@ -44,7 +44,7 @@ where
 
 /// Open the file located at `path` and yield an iterator on every line, as String.
 pub fn input_lines(path: impl AsRef<Path>) -> impl Iterator<Item = String> {
-    get_buf(path).lines().filter_map(|line| line.ok())
+    get_buf(path).lines().map_while(Result::ok)
 }
 
 /// Open the file located at `path` and read everything at once, storing the whole file in a String.

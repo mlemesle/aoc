@@ -1,7 +1,7 @@
 fn solve<'a>(
     part: usize,
     instructions: impl Iterator<Item = &'a String>,
-    str_fn: impl Fn(&'a String) -> String,
+    str_fn: fn(&str) -> String,
 ) -> anyhow::Result<()> {
     let calibration_values = instructions
         .enumerate()
@@ -31,7 +31,7 @@ fn solve<'a>(
 fn main() -> anyhow::Result<()> {
     let lines = lib::input_lines("input/day01.txt").collect::<Vec<_>>();
 
-    solve(1, lines.iter(), |s| s.to_string())?;
+    solve(1, lines.iter(), str::to_string)?;
     solve(2, lines.iter(), |s| {
         s.replace("one", "o1e")
             .replace("two", "t2o")
